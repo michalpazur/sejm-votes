@@ -8,10 +8,13 @@ with open('vote_results.csv', 'w') as f:
     f.write('\n')
 
     for i in range(len(results['PiS'])):
+        string = ''
         for key in results.keys():
             value = results[key][i]
             value = value if value != -2 else 0
-            f.write('{},'.format(value))
+            string = '{}{},'.format(string, value)
+        string = string[:-1]
+        f.write(string)
         f.write('\n')
 
 for key in results.keys():
