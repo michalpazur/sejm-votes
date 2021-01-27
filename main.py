@@ -39,6 +39,7 @@ party_names = {
 
 all_days_page = requests.get(base_link + 'agent.xsp?symbol=posglos&NrKadencji=9')
 all_days_soup = bs(all_days_page.content, 'html.parser')
+
 for all_votes_link in all_days_soup.find('tbody').findAll('a'):
     print(all_votes_link.text)
     all_votes_soup = bs(requests.get(base_link + all_votes_link['href']).content, 'html.parser')
@@ -49,15 +50,21 @@ for all_votes_link in all_days_soup.find('tbody').findAll('a'):
         
         print(vote_link.text)
         vote_soup = bs(requests.get(base_link + vote_link['href']).content, 'html.parser')
-
-        all_cells = vote_soup.find("tbody").findAll("td")
+        
+        try:
+            all_cells = vote_soup.find("tbody").findAll("td")
+        except:
+            continue
 
         for i in range(6):
+            if (len(all_cells) != 42):
+                continue
+
             row = all_cells[i * 7:(i * 7) + 6]
             cell_index = 0
+            party_name = ''
 
             for cell in row:
-                party_name = ''
                 party_results = [0, 0, 0, 0]
                 if (cell_index == 0):
                     party_name = cell.text
@@ -67,10 +74,10 @@ for all_votes_link in all_days_soup.find('tbody').findAll('a'):
                         cell_text = '0'
 
                     party_results[cell_index - 3] = int(cell_text)
-                    cell_index += 1
                 
                     party_ratio = get_results(party_results)
                     vote_results[party_names[party_name]].append(party_ratio)
+                cell_index += 1
 
 with open('vote_results.json', 'w', encoding='utf-8') as f:
     json.dump(vote_results, f)
