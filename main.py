@@ -16,6 +16,7 @@ def get_results(vote_results):
         return -2
 
 base_link = 'http://www.sejm.gov.pl/Sejm9.nsf/'
+
 vote_results = {
     'PiS': [],
     'KO': [],
@@ -69,9 +70,9 @@ for all_votes_link in all_days_soup.find('tbody').findAll('a'):
             row = all_cells[i * 7:(i * 7) + 6]
             cell_index = 0
             party_name = ''
+            party_results = [0, 0, 0, 0]
 
             for cell in row:
-                party_results = [0, 0, 0, 0]
                 if (cell_index == 0):
                     party_name = cell.text
                 elif (cell_index > 2):
@@ -81,9 +82,10 @@ for all_votes_link in all_days_soup.find('tbody').findAll('a'):
 
                     party_results[cell_index - 3] = int(cell_text)
                 
-                    party_ratio = get_results(party_results)
-                    vote_results[party_names[party_name]].append(party_ratio)
                 cell_index += 1
+
+            party_ratio = get_results(party_results)
+            vote_results[party_names[party_name]].append(party_ratio)
 
 with open('vote_results.json', 'w', encoding='utf-8') as f:
     json.dump(vote_results, f)
