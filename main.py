@@ -40,6 +40,9 @@ party_names = {
 all_days_page = requests.get(base_link + 'agent.xsp?symbol=posglos&NrKadencji=9')
 all_days_soup = bs(all_days_page.content, 'html.parser')
 
+with open("titles.txt", "w") as f:
+    f.write("") #make sure the file is empty
+
 for all_votes_link in all_days_soup.find('tbody').findAll('a'):
     print(all_votes_link.text)
     all_votes_soup = bs(requests.get(base_link + all_votes_link['href']).content, 'html.parser')
@@ -47,6 +50,9 @@ for all_votes_link in all_days_soup.find('tbody').findAll('a'):
         vote_link = vote_row.find('a')
         if ('stwierdzenie kworum' in vote_link.text or 'przerwy w obradach' in vote_link.text):
             continue
+        
+        with open("titles.txt", "a", encoding="utf-8") as f:
+            f.write(vote_row.text + "\n")
         
         print(vote_link.text)
         vote_soup = bs(requests.get(base_link + vote_link['href']).content, 'html.parser')
