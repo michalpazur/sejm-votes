@@ -8,6 +8,15 @@ def average(arr):
 with open('vote_results_2.json', 'r') as f:
     results = json.load(f)
 
+mps = {}
+party_names = []
+with open("mps.json", "r", encoding="utf-8") as f:
+    mps = json.load(f)
+
+for party_name in list(mps.values()):
+    if (party_name not in party_names):
+        party_names.append(party_name)
+
 avgs = {}
 std_vars = {}
 corrs = {}
@@ -47,7 +56,7 @@ sorted_results = {}
 for key in sorted_results_keys:
     sorted_results[key] = results[key]
 
-img = Image.new('RGBA', (3000, 3000))
+img = Image.new('RGBA', (len(party_names) * 500, len(party_names) * 500))
 x = 0
 for key_x in sorted_results:
     y = 0
