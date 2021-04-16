@@ -40,6 +40,13 @@ all_days_soup = bs(all_days_page.content, 'html.parser')
 with open("titles.txt", "w") as f:
     f.write("") #make sure the file is empty
 
+with open("vote_results.csv", "w") as f:
+    line = ""
+    for party_name in party_names:
+        line += party_name + ","
+    line = line[:-1] + "\n"
+    f.write(line)
+
 for all_votes_link in all_days_soup.find('tbody').findAll('a'):
     print(all_votes_link.text)
     all_votes_soup = bs(requests.get(base_link + all_votes_link['href']).content, 'html.parser')
@@ -84,13 +91,12 @@ for all_votes_link in all_days_soup.find('tbody').findAll('a'):
 
         if (not should_pass):
             continue
-            
-        for party in tmp_party_results:
-            party_ratio = get_results(tmp_party_results[party])
-            arr = vote_results.setdefault(party, [])
-            arr.append(party_ratio)
-            vote_results[party] = arr
-            print("{} - {}".format(party, party_ratio))
         
-with open('vote_results.json', 'w', encoding='utf-8') as f:
-    json.dump(vote_results, f)
+        with open("vote_results.csv", "a") as f:
+            line = ""
+            for party_name in party_names:
+                party_ratio = get_results(tmp_party_results[party_name])
+                print("{} - {}".format(party_name, party_ratio))
+                line += str(party_ratio) + ","
+            line = line[:-1] + "\n"
+            f.write(line)
