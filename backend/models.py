@@ -2,6 +2,18 @@ import peewee
 
 database = peewee.PostgresqlDatabase("postgres", user="postgres", password="admin")
 
+def split_name(name):
+  name = name.split(" ")
+  if ("vel" in name):
+    #👀 at you Szymon Szynkowski vel Sęk
+    first_name = " ".join(name[-1:])
+    last_name = " ".join(name[0:3])
+  else:
+    first_name = " ".join(name[1:])
+    last_name = name[0]
+
+  return first_name, last_name
+
 class BaseModel(peewee.Model):
   class Meta:
     database = database
@@ -15,7 +27,7 @@ class Day(BaseModel):
 
 class Vote(BaseModel):
   number = peewee.IntegerField()
-  title = peewee.CharField()
+  title = peewee.CharField(max_length=1024)
   day = peewee.ForeignKeyField(Day)
 
 class Deputy(BaseModel):

@@ -1,7 +1,7 @@
 import requests
 from bs4 import BeautifulSoup as bs
 import json
-from backend.models import Deputy, database
+from backend.models import Deputy, split_name
 
 letters = ["A", "B"]
 all_mps = {}
@@ -18,17 +18,8 @@ for page_letter in letters:
       party = mp.find("div", "deputy-box-details").find("strong").text
       print(name, party)
       all_mps[name] = party
-      
-      first_name = ""
-      last_name = ""
-      name = name.split(" ")
-      if ("vel" in name):
-        #👀 at you Szymon Szynkowski vel Sęk
-        first_name = " ".join(name[-1:])
-        last_name = " ".join(name[0:3])
-      else:
-        first_name = " ".join(name[1:])
-        last_name = name[0]
+
+      first_name, last_name = split_name(name)
 
       try:
         deputy = Deputy.select().where((Deputy.first_name==first_name) & (Deputy.last_name==last_name)).get()
