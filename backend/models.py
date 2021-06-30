@@ -27,7 +27,8 @@ class Day(BaseModel):
 
 class Vote(BaseModel):
   number = peewee.IntegerField()
-  title = peewee.CharField(max_length=1024)
+  total_votes = peewee.IntegerField()
+  title = peewee.CharField(max_length=2048)
   day = peewee.ForeignKeyField(Day)
 
 class Deputy(BaseModel):

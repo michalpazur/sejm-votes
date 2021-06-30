@@ -92,18 +92,19 @@ for all_votes_link in all_days_soup.find('tbody').findAll('a'):
 
         vote = None
         vote_number = int(row.find("td", class_="bold").text)
-        try:
-            vote = m.Vote.get((m.Vote.day == day) & (m.Vote.number == vote_number))
-        except:
-            print("Creating vote with number {}...".format(vote_number))
-            vote = m.Vote(day=day, title=title, number=vote_number)
-            vote.save()
+        print(title)
 
         #If all the votes have been counted there's no need to count them again
-        count = m.Result.select().where(m.Result.vote == vote).count()
-        if (count == 460):
-            print("Skipping vote {}, all votes are counted.".format(short_title))
-            continue
+        try:
+            vote = m.Vote.get((m.Vote.day == day) & (m.Vote.number == vote_number))
+            count = m.Result.select().where(m.Result.vote == vote).count()
+            if (count == vote.total_votes):
+                print("Skipping vote {}, all votes are counted.".format(vote_number))
+                continue
+            else:
+                print("Counted {} votes, {} votes are missing.".format(count, vote.total_votes - count))
+        except:
+            pass
 
         #If not, download the page and count the votes
         vote_soup = bs(requests.get(base_link + vote_link['href']).content, 'html.parser')
@@ -116,9 +117,19 @@ for all_votes_link in all_days_soup.find('tbody').findAll('a'):
         with open("titles.txt", "a", encoding="utf-8") as f:
             f.write(title + "\n")
 
+        #Getting total number of votes from the header
+        bold_elements = vote_soup.find("div", class_="sub-title").findAll("strong")
+        voted = int(bold_elements[0].text)
+        not_voted = int(bold_elements[4].text)
+        total = voted + not_voted
+        print("Voted: {}, not voted: {}, total: {}".format(voted, not_voted, total))
+        if (vote is None):
+            print("Creating vote with number {}...".format(vote_number))
+            vote = m.Vote(day=day, title=title, number=vote_number, total_votes=total)
+            vote.save()
+
         tmp_party_results = {k: [0, 0, 0, 0] for k in party_names}
         should_pass = True
-
         for cell in list(all_cells):
             party_results_link = cell.find("a")
             party_results_page = bs(requests.get(base_link + party_results_link["href"]).content, 'html.parser')
@@ -165,7 +176,7 @@ for all_votes_link in all_days_soup.find('tbody').findAll('a'):
             line = ""
             for party_name in party_names:
                 party_ratio = get_results(tmp_party_results[party_name])
-                print("{} - {}".format(party_name, party_ratio))
+                #print("{} - {}".format(party_name, party_ratio))
                 line += str(party_ratio) + ","
             line = line[:-1] + "\n"
             f.write(line)
