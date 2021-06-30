@@ -125,7 +125,9 @@ for all_votes_link in all_days_soup.find('tbody').findAll('a'):
         print("Voted: {}, not voted: {}, total: {}".format(voted, not_voted, total))
         if (vote is None):
             print("Creating vote with number {}...".format(vote_number))
-            vote = m.Vote(day=day, title=title, number=vote_number, total_votes=total)
+            time = row.findAll("td")[1].text.split(":")
+            time_formatted = datetime.time(int(time[0]), int(time[1]), int(time[2]))
+            vote = m.Vote(day=day, title=title, number=vote_number, total_votes=total, time=time_formatted)
             vote.save()
 
         tmp_party_results = {k: [0, 0, 0, 0] for k in party_names}

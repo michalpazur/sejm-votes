@@ -28,6 +28,7 @@ class Day(BaseModel):
 class Vote(BaseModel):
   number = peewee.IntegerField()
   total_votes = peewee.IntegerField()
+  time = peewee.TimeField()
   title = peewee.CharField(max_length=2048)
   day = peewee.ForeignKeyField(Day)
 
