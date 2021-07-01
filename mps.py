@@ -1,10 +1,8 @@
 import requests
 from bs4 import BeautifulSoup as bs
-import json
 from backend.models import Deputy, split_name
 
 letters = ["A", "B"]
-all_mps = {}
 
 for page_letter in letters:
   res = requests.get("http://sejm.gov.pl/Sejm9.nsf/poslowie.xsp?type={}".format(page_letter))
@@ -17,7 +15,6 @@ for page_letter in letters:
       name = mp.find("div", "deputyName").text
       party = mp.find("div", "deputy-box-details").find("strong").text
       print(name, party)
-      all_mps[name] = party
 
       first_name, last_name = split_name(name)
 
@@ -29,6 +26,3 @@ for page_letter in letters:
         print("Creating deputy {} {}".format(first_name, last_name))
         deputy = Deputy(first_name=first_name, last_name=last_name, party=party)
         deputy.save()
-
-with open('mps.json', 'w', encoding='utf-8') as f:
-  json.dump(all_mps, f, ensure_ascii=False, sort_keys=True, indent=2)

@@ -4,26 +4,6 @@ import json
 import backend.models as m
 import datetime
 
-def get_results(vote_results):
-    all_votes = sum(vote_results)
-    votes_for = vote_results[0]
-    votes_against = vote_results[1]
-    abstained = vote_results[2]
-    no_vote = vote_results[3]
-
-    if (all_votes - no_vote > 0):
-        ratio = (votes_for - votes_against) / (all_votes - no_vote)
-        return ratio
-    else:
-        return -2
-
-vote_results_indicies = {
-    "Za": 0,
-    "Przeciw": 1,
-    "Wstrzymał się": 2,
-    "Nieobecny": 3,
-}
-
 vote_results_values = {
     "Za": 1,
     "Przeciw": -1,
@@ -32,29 +12,9 @@ vote_results_values = {
 }
 
 base_link = 'http://www.sejm.gov.pl/Sejm9.nsf/'
-mps = {}
-vote_results = {}
-party_names = []
-
-with open("mps.json", "r", encoding="utf-8") as f:
-    mps = json.load(f)
-
-for party_name in list(mps.values()):
-    if (party_name not in party_names):
-        party_names.append(party_name)
 
 all_days_page = requests.get(base_link + 'agent.xsp?symbol=posglos&NrKadencji=9')
 all_days_soup = bs(all_days_page.content, 'html.parser')
-
-with open("titles.txt", "w") as f:
-    f.write("") #make sure the file is empty
-
-with open("vote_results.csv", "w") as f:
-    line = ""
-    for party_name in party_names:
-        line += party_name + ","
-    line = line[:-1] + "\n"
-    f.write(line)
 
 for all_votes_link in all_days_soup.find('tbody').findAll('a'):
     print(all_votes_link.text)
@@ -114,9 +74,6 @@ for all_votes_link in all_days_soup.find('tbody').findAll('a'):
             print("Encountered an error while parsing HTML.")
             continue
 
-        with open("titles.txt", "a", encoding="utf-8") as f:
-            f.write(title + "\n")
-
         #Getting total number of votes from the header
         bold_elements = vote_soup.find("div", class_="sub-title").findAll("strong")
         voted = int(bold_elements[0].text)
@@ -130,7 +87,6 @@ for all_votes_link in all_days_soup.find('tbody').findAll('a'):
             vote = m.Vote(day=day, title=title, number=vote_number, total_votes=total, time=time_formatted)
             vote.save()
 
-        tmp_party_results = {k: [0, 0, 0, 0] for k in party_names}
         should_pass = True
         for cell in list(all_cells):
             party_results_link = cell.find("a")
@@ -146,12 +102,7 @@ for all_votes_link in all_days_soup.find('tbody').findAll('a'):
             for i in range(int(len(all_results_cells)/2)):
                 name = all_results_cells[i * 2].text
                 res = all_results_cells[(i * 2) + 1].text
-                result = vote_results_indicies[res]
                 result_value = vote_results_values[res]
-                party_name = mps[name]
-                arr = tmp_party_results[party_name]
-                arr[result] = arr[result] + 1
-                tmp_party_results[party_name] = arr
 
                 first_name, last_name = m.split_name(name)
                 deputy = None
@@ -170,15 +121,3 @@ for all_votes_link in all_days_soup.find('tbody').findAll('a'):
                 except:
                     vote_result = m.Result(result=result_value, vote=vote, deputy=deputy)
                     vote_result.save()
-
-        if (not should_pass):
-            continue
-        
-        with open("vote_results.csv", "a") as f:
-            line = ""
-            for party_name in party_names:
-                party_ratio = get_results(tmp_party_results[party_name])
-                #print("{} - {}".format(party_name, party_ratio))
-                line += str(party_ratio) + ","
-            line = line[:-1] + "\n"
-            f.write(line)
