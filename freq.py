@@ -1,4 +1,5 @@
 import re
+from backend.models import Vote
 stop_words = []
 
 with open("stop.txt", "r", encoding="utf-8") as f:
@@ -7,18 +8,18 @@ with open("stop.txt", "r", encoding="utf-8") as f:
 
 frequency = {}
 
-with open("titles.txt", "r", encoding="utf-8") as f:
-    for line in f:
-        line = line.strip()
-        line = re.sub(r"^Pkt \d+\. porz\. dzien\. ", "", line)
-        for word in line.split(" "):
-            word = word.lower()
-            word = word.replace(",", "")
-            word = word.replace(".", "")
-            
-            if (word in stop_words or word == "" or re.match(r"^\d+", word)):
-                continue
-            frequency[word] = frequency.setdefault(word, 0) + 1
+all_votes = Vote.select()
+for vote in all_votes:
+    line = vote.title.strip()
+    line = re.sub(r"^Pkt \d+\. porz\. dzien\. ", "", line)
+    for word in line.split(" "):
+        word = word.lower()
+        word = word.replace(",", "")
+        word = word.replace(".", "")
+        
+        if (word in stop_words or word == "" or re.match(r"^\d+", word)):
+            continue
+        frequency[word] = frequency.setdefault(word, 0) + 1
 
 sorted_freq = {}
 with open("freqs.csv", "w", encoding="utf-8") as f:
