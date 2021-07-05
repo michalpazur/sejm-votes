@@ -14,12 +14,12 @@ for page_letter in letters:
     for mp in letter_mps:
       name = mp.find("div", "deputyName").text
       party = mp.find("div", "deputy-box-details").find("strong").text
-      print(name, party)
 
       first_name, last_name = split_name(name)
-
       try:
         deputy = Deputy.select().where((Deputy.first_name==first_name) & (Deputy.last_name==last_name)).get()
+        if (deputy.party != party):
+          print("Updating information about {} {}".format(first_name, last_name))
         deputy.party = party
         deputy.save()
       except:
