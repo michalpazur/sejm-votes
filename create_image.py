@@ -18,7 +18,7 @@ def get_results(vote_results):
     ratio = (votes_for - votes_against) / (all_votes - no_vote)
     return ratio
   else:
-    return 
+    return 0
         
 def calculate_correlation(party_x, party_y, avgs, std_devs, corrs):
   corr = 0
