@@ -1,6 +1,5 @@
 import requests
 from bs4 import BeautifulSoup as bs
-import json
 import backend.models as m
 import datetime
 

@@ -1,6 +1,10 @@
+from dotenv import load_dotenv
+from os import environ as env
 import peewee
 
-database = peewee.PostgresqlDatabase("postgres", user="postgres", password="admin")
+load_dotenv()
+
+database = peewee.PostgresqlDatabase(env.get("POSTGRES_DB"), user=env.get("POSTGRES_USER"), password=env.get("POSTGRES_PASSWORD"), host="localhost", port="5432")
 
 def split_name(name):
   name = name.split(" ")

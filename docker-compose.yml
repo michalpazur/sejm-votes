@@ -1,0 +1,16 @@
+version: "3.9"
+services:
+  db:
+    build:
+      context: ./docker/psql
+      dockerfile: Dockerfile
+    ports:
+      - 5432:5432
+    env_file:
+      - .env
+  admin:
+    image: dpage/pgadmin4:latest
+    ports:
+      - 5433:80
+    env_file:
+      - .env
