@@ -8,6 +8,8 @@ services:
       - 5432:5432
     env_file:
       - .env
+    volumes:
+      - ./db:/var/lib/postgresql/data
   admin:
     image: dpage/pgadmin4:latest
     ports:

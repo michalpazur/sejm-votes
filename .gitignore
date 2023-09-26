@@ -126,3 +126,6 @@ dmypy.json
 
 *.png
 *.psd
+
+# Postgres local files
+/db
