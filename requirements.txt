@@ -1,4 +1,5 @@
 peewee
+peewee-migrate
 psycopg2-binary
 python-dotenv
 requests
