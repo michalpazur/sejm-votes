@@ -11,6 +11,7 @@ vote_results_values = {
 }
 
 base_link = 'http://www.sejm.gov.pl/Sejm9.nsf/'
+banned_words = ['stwierdzenie kworum', 'przerwy w obradach', 'odroczeniem posiedzenia', 'rozstrzygnięcie punktu spornego', 'wniosek o przerwę', 'ustalenie czasów debat']
 
 all_days_page = requests.get(base_link + 'agent.xsp?symbol=posglos&NrKadencji=9')
 all_days_soup = bs(all_days_page.content, 'html.parser')
@@ -43,7 +44,7 @@ for all_votes_link in all_days_soup.find('tbody').findAll('a'):
     for row in all_votes_soup.find("tbody").findAll('tr'):
         vote_row = row.find("td", class_="left")
         vote_link = vote_row.find('a')
-        if ('stwierdzenie kworum' in vote_link.text or 'przerwy w obradach' in vote_link.text or 'odroczeniem posiedzenia' in vote_link.text):
+        if (vote_link is None or vote_link.text is None or vote_link.text.lower() in banned_words):
             continue
 
         title = vote_row.text
