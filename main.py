@@ -97,6 +97,8 @@ for all_votes_link in all_days_soup.find('tbody').findAll('a'):
                 should_pass = False
                 break
 
+            new_vote_results = []
+            vote_results = []
             #one MP has two cells - one for their name and one for their vote
             #hence the division by two
             for i in range(int(len(all_results_cells)/2)):
@@ -117,7 +119,11 @@ for all_votes_link in all_days_soup.find('tbody').findAll('a'):
                 try:
                     vote_result = m.Result.get((m.Result.deputy == deputy) & (m.Result.vote == vote))
                     vote_result.result = result_value
-                    vote_result.save()
+                    vote_results.append(vote_result)
                 except:
                     vote_result = m.Result(result=result_value, vote=vote, deputy=deputy)
-                    vote_result.save()
+                    new_vote_results.append(vote_result)
+
+            with m.database.atomic():
+                m.Result.bulk_create(new_vote_results, batch_size=100)
+                m.Result.bulk_update(vote_results, fields=[m.Result.result], batch_size=50)

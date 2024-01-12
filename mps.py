@@ -9,6 +9,8 @@ for page_letter in letters:
   soup = bs(res.content, 'html.parser')
 
   all_letters = soup.findAll("ul", "deputies")
+  new_deputies = []
+  deputies = []
   for letter in all_letters:
     letter_mps = letter.findAll("li")
     for mp in letter_mps:
@@ -20,9 +22,12 @@ for page_letter in letters:
         deputy = Deputy.select().where((Deputy.first_name==first_name) & (Deputy.last_name==last_name)).get()
         if (deputy.party != party):
           print("Updating information about {} {}".format(first_name, last_name))
-        deputy.party = party
-        deputy.save()
+          deputy.party = party
+          deputies.append(deputy)
       except:
         print("Creating deputy {} {}".format(first_name, last_name))
         deputy = Deputy(first_name=first_name, last_name=last_name, party=party)
-        deputy.save()
+        new_deputies.append(deputy)
+
+  Deputy.bulk_update(deputies, fields=[Deputy.party], batch_size=50)
+  Deputy.bulk_create(new_deputies, batch_size=100)
