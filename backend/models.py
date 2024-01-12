@@ -10,8 +10,8 @@ def split_name(name):
   name = name.split(" ")
   if ("vel" in name):
     #👀 at you Szymon Szynkowski vel Sęk
-    first_name = " ".join(name[-1:])
-    last_name = " ".join(name[0:3])
+    first_name = name[-1]
+    last_name = " ".join(name[:-1])
   else:
     first_name = " ".join(name[1:])
     last_name = name[0]
