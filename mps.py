@@ -1,33 +1,45 @@
 import requests
-from bs4 import BeautifulSoup as bs
-from backend.models import Deputy, split_name
+from backend.models import Club, Deputy, Term
+from config.url import term_url
+from util.fetch import get
 
-letters = ["A", "B"]
+def update_mps(db_term: Term):
+  updated_mps = []
+  new_mps = []
+  term = db_term.id
+  mps = get(f"{term_url(term)}/MP")
+  term_mps = Deputy.select().where(Deputy.term == db_term)
+  for mp in mps:
+    club = None
+    club_id = mp["club"]
+    try:
+      club = Club.get(Club.sejm_id == club_id)
+    except Club.DoesNotExist:
+      raise Club.DoesNotExist(f"Club {club_id} does not exist! Perhaps you forgot to run clubs.py first?")
+    try:
+      db_mp = term_mps.select().where(Deputy.sejm_id == mp["id"]).get()
+      if (db_mp.club != club):
+        db_mp.club = club
+        updated_mps.append(db_mp)
+    except Deputy.DoesNotExist:
+      new_mp = Deputy(
+        first_name=mp["firstName"],
+        last_name=mp["lastName"],
+        term=db_term,
+        club=club,
+        birthday=mp["birthDate"],
+        district_num=mp["districtNum"],
+        sejm_id=mp["id"]
+      )
+      new_mps.append(new_mp)
 
-for page_letter in letters:
-  res = requests.get("http://sejm.gov.pl/Sejm9.nsf/poslowie.xsp?type={}".format(page_letter))
-  soup = bs(res.content, 'html.parser')
+  if (len(updated_mps)):
+    Deputy.bulk_update(updated_mps, fields=[Deputy.club])
+  Deputy.bulk_create(new_mps)
+  print(f"Updated {len(updated_mps)} MPs, created {len(new_mps)}.")
 
-  all_letters = soup.findAll("ul", "deputies")
-  new_deputies = []
-  deputies = []
-  for letter in all_letters:
-    letter_mps = letter.findAll("li")
-    for mp in letter_mps:
-      name = mp.find("div", "deputyName").text
-      party = mp.find("div", "deputy-box-details").find("strong").text
-
-      first_name, last_name = split_name(name)
-      try:
-        deputy = Deputy.select().where((Deputy.first_name==first_name) & (Deputy.last_name==last_name)).get()
-        if (deputy.party != party):
-          print("Updating information about {} {}".format(first_name, last_name))
-          deputy.party = party
-          deputies.append(deputy)
-      except:
-        print("Creating deputy {} {}".format(first_name, last_name))
-        deputy = Deputy(first_name=first_name, last_name=last_name, party=party)
-        new_deputies.append(deputy)
-
-  Deputy.bulk_update(deputies, fields=[Deputy.party], batch_size=50)
-  Deputy.bulk_create(new_deputies, batch_size=100)
+if (__name__ == "__main__"):
+  terms = Term.select()
+  for term in terms:
+    print(f"Updating MPs for term {term.id}...")
+    update_mps(term)

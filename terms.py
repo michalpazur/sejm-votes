@@ -1,5 +1,5 @@
 import requests
-from config import base_url
+from config.url import base_url
 from backend.models import Term
 
 terms_to_include = [9, 10]
