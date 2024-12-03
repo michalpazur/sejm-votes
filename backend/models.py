@@ -22,8 +22,13 @@ class BaseModel(peewee.Model):
   class Meta:
     database = database
 
+class Term(BaseModel):
+  start = peewee.DateField()
+  end = peewee.DateField(null=True)
+
 class Sitting(BaseModel):
   number = peewee.IntegerField()
+  term: peewee.ForeignKeyField(Term)
 
 class Day(BaseModel):
   date = peewee.DateField()
@@ -40,6 +45,8 @@ class Deputy(BaseModel):
   first_name = peewee.CharField()
   last_name = peewee.CharField()
   party = peewee.CharField()
+  sejm_id: peewee.IntegerField()
+  term: peewee.ForeignKeyField(Term)
 
 class Result(BaseModel):
   result = peewee.IntegerField()
@@ -55,10 +62,11 @@ if __name__ == "__main__":
   #DANGER ZONE
   if ("sitting" not in database.get_tables()):
     print("Dropping all tables...")
-    database.drop_tables(models=[Sitting, Day, Vote, Deputy, Result, PartyResult])
+    database.drop_tables(models=[Term, Sitting, Day, Vote, Deputy, Result, PartyResult])
     print("Done.")
     print("Creating new tables...")
     try:
+      Term.create_table()
       Sitting.create_table()
       Day.create_table()
       Deputy.create_table()
