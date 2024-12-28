@@ -1,5 +1,6 @@
 peewee
 peewee-migrate2
+playhouse
 psycopg2-binary
 python-dotenv
 requests

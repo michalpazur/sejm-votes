@@ -1,10 +1,11 @@
 from dotenv import load_dotenv
 from os import environ as env
 import peewee
+import playhouse.postgres_ext as psql
 
 load_dotenv()
 
-database = peewee.PostgresqlDatabase(env.get("POSTGRES_DB"), user=env.get("POSTGRES_USER"), password=env.get("POSTGRES_PASSWORD"), host="localhost", port="5432")
+database = psql.PostgresqlExtDatabase(env.get("POSTGRES_DB"), user=env.get("POSTGRES_USER"), password=env.get("POSTGRES_PASSWORD"), host="localhost", port="5432")
 
 class BaseModel(peewee.Model):
   class Meta:
@@ -21,18 +22,15 @@ class Club(BaseModel):
 
 class Sitting(BaseModel):
   number = peewee.IntegerField()
-  term: peewee.ForeignKeyField(Term, backref="sittings")
-
-class Day(BaseModel):
-  date = peewee.DateField()
-  sitting = peewee.ForeignKeyField(Sitting, backref="days")
+  days = psql.ArrayField(peewee.DateField)
+  term = peewee.ForeignKeyField(Term, backref="sittings")
 
 class Vote(BaseModel):
   number = peewee.IntegerField()
   total_votes = peewee.IntegerField()
   time = peewee.TimeField()
   title = peewee.CharField(max_length=2048)
-  day = peewee.ForeignKeyField(Day, backref="votes")
+  sitting = peewee.ForeignKeyField(Sitting, backref="votes")
 
 class Deputy(BaseModel):
   first_name = peewee.CharField()
@@ -57,14 +55,13 @@ if __name__ == "__main__":
   #DANGER ZONE
   if ("sitting" not in database.get_tables()):
     print("Dropping all tables...")
-    database.drop_tables(models=[Term, Club, Sitting, Day, Vote, Deputy, Result, PartyResult])
+    database.drop_tables(models=[Term, Club, Sitting, Vote, Deputy, Result, PartyResult])
     print("Done.")
     print("Creating new tables...")
     try:
       Term.create_table()
       Club.create_table()
       Sitting.create_table()
-      Day.create_table()
       Deputy.create_table()
       Vote.create_table()
       Result.create_table()
