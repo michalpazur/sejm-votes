@@ -14,9 +14,7 @@ def update_sittings(db_term: Term):
   
   sittings = get(f"{term_url(term)}/proceedings")
   term_sittings = Sitting.select().where(Sitting.term == db_term)
-  i = 0
   for sitting in sittings:
-    i += 1
     try:
       db_sitting = term_sittings.select().where(Sitting.number == sitting["number"]).get()
       if (db_sitting.number == 0):

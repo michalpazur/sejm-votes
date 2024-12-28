@@ -28,8 +28,9 @@ class Sitting(BaseModel):
 class Vote(BaseModel):
   number = peewee.IntegerField()
   total_votes = peewee.IntegerField()
-  time = peewee.TimeField()
+  time = peewee.DateTimeField()
   title = peewee.CharField(max_length=2048)
+  topic = peewee.CharField(max_length=2048)
   sitting = peewee.ForeignKeyField(Sitting, backref="votes")
 
 class Deputy(BaseModel):
@@ -44,28 +45,23 @@ class Deputy(BaseModel):
 class Result(BaseModel):
   result = peewee.IntegerField()
   deputy = peewee.ForeignKeyField(Deputy)
-  vote = peewee.ForeignKeyField(Vote, backref="results")
+  vote = peewee.ForeignKeyField(Vote, backref="results", on_delete="CASCADE")
 
 class PartyResult(BaseModel):
   party = peewee.CharField()
   result = peewee.FloatField()
-  vote = peewee.ForeignKeyField(Vote, backref="votes")
+  vote = peewee.ForeignKeyField(Vote, backref="party_results", on_delete="CASCADE")
 
 if __name__ == "__main__":
   #DANGER ZONE
   if ("sitting" not in database.get_tables()):
     print("Dropping all tables...")
-    database.drop_tables(models=[Term, Club, Sitting, Vote, Deputy, Result, PartyResult])
+    models = [Term, Club, Sitting, Vote, Deputy, Result, PartyResult]
+    database.drop_tables(models)
     print("Done.")
     print("Creating new tables...")
     try:
-      Term.create_table()
-      Club.create_table()
-      Sitting.create_table()
-      Deputy.create_table()
-      Vote.create_table()
-      Result.create_table()
-      PartyResult.create_table()
+      database.create_tables(models)
     except Exception as e:
       print(e)
     print("Done.")
